@@ -169,9 +169,51 @@ export const api = {
     return users.find((u) => u.id === id) || null;
   },
 
+  updateUser(id, patch = {}) {
+    if (!id) {
+      throw new Error("Пользователь не найден");
+    }
+
+    const users = ensureArray(KEYS.users);
+    const idx = users.findIndex((u) => u.id === id);
+    if (idx === -1) {
+      throw new Error("Пользователь не найден");
+    }
+
+    const current = users[idx];
+    const nextName = patch.name != null ? String(patch.name).trim() : current.name;
+
+    if (!nextName) {
+      throw new Error("Имя обязательно");
+    }
+
+    const nextAvatarUrlRaw = patch.avatarUrl != null ? String(patch.avatarUrl).trim() : current.avatarUrl;
+    const nextAvatarUrl = nextAvatarUrlRaw ? nextAvatarUrlRaw : null;
+
+    const t = nowIso();
+    const updated = {
+      ...current,
+      name: nextName,
+      avatarUrl: nextAvatarUrl,
+      updatedAt: t,
+    };
+
+    users[idx] = updated;
+    writeJson(KEYS.users, users);
+    return updated;
+  },
+
   getCurrentUser() {
     const session = this.getSession();
     return this.getUserById(session.currentUserId);
+  },
+
+  updateCurrentUserProfile(patch = {}) {
+    const session = this.getSession();
+    if (!session.currentUserId) {
+      throw new Error("Нет активной сессии");
+    }
+    return this.updateUser(session.currentUserId, patch);
   },
 
   register({ role, name, email, password }) {

@@ -38,4 +38,11 @@ export const store = {
     this.state.currentUser = user;
     return user;
   },
+
+  updateProfile(patch) {
+    const updated = api.updateCurrentUserProfile(patch);
+    this.state.userId = updated.id;
+    this.state.currentUser = updated;
+    return updated;
+  },
 };
