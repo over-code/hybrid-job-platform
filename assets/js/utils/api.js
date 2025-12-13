@@ -135,8 +135,20 @@ export const api = {
     return ensureArray(KEYS.vacancies);
   },
 
+  getVacancyById(id) {
+    if (!id) return null;
+    const vacancies = ensureArray(KEYS.vacancies);
+    return vacancies.find((v) => v.id === id) || null;
+  },
+
   getProjects() {
     return ensureArray(KEYS.projects);
+  },
+
+  getProjectById(id) {
+    if (!id) return null;
+    const projects = ensureArray(KEYS.projects);
+    return projects.find((p) => p.id === id) || null;
   },
 
   getUsers() {

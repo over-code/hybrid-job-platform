@@ -6,8 +6,10 @@ import { renderRegister, mountRegister } from "./pages/register.js";
 import { renderForgotPassword } from "./pages/forgot-password.js";
 import { renderResetPassword, mountResetPassword } from "./pages/reset-password.js";
 import { renderProfile, mountProfile } from "./pages/profile.js";
-import { renderVacancies } from "./pages/vacancies.js";
-import { renderProjects } from "./pages/projects.js";
+import { renderVacancies, mountVacancies } from "./pages/vacancies.js";
+import { renderVacancyDetails } from "./pages/vacancy-details.js";
+import { renderProjects, mountProjects } from "./pages/projects.js";
+import { renderProjectDetails } from "./pages/project-details.js";
 import { renderNotFound } from "./pages/not-found.js";
 import { store } from "./store.js";
 
@@ -19,11 +21,13 @@ function getAppRoot() {
   return root;
 }
 
-function getPathFromHash() {
+function parseHash() {
   const raw = window.location.hash || "";
   const withoutHash = raw.startsWith("#") ? raw.slice(1) : raw;
-  const path = withoutHash.trim() || "/";
-  return path;
+  const trimmed = withoutHash.trim() || "/";
+  const [path, search = ""] = trimmed.split("?");
+  const query = Object.fromEntries(new URLSearchParams(search));
+  return { path: path || "/", query };
 }
 
 const routes = {
@@ -35,15 +39,39 @@ const routes = {
   "/forgot-password": { render: renderForgotPassword },
   "/reset-password": { render: renderResetPassword, mount: mountResetPassword },
   "/profile": { render: renderProfile, mount: mountProfile, isPrivate: true },
-  "/vacancies": { render: renderVacancies },
-  "/projects": { render: renderProjects },
+  "/vacancies": { render: renderVacancies, mount: mountVacancies },
+  "/projects": { render: renderProjects, mount: mountProjects },
 };
+
+function matchDynamicRoute(path) {
+  const vacancyPrefix = "/vacancies/";
+  if (path.startsWith(vacancyPrefix)) {
+    const id = path.slice(vacancyPrefix.length);
+    if (id) return { render: renderVacancyDetails, params: { id } };
+  }
+
+  const projectPrefix = "/projects/";
+  if (path.startsWith(projectPrefix)) {
+    const id = path.slice(projectPrefix.length);
+    if (id) return { render: renderProjectDetails, params: { id } };
+  }
+
+  return null;
+}
 
 function renderRoute() {
   const root = getAppRoot();
-  const path = getPathFromHash();
+  const { path, query } = parseHash();
   store.refreshCurrentUser();
-  const route = routes[path];
+  const staticRoute = routes[path];
+  const dynamic = matchDynamicRoute(path);
+  const route = staticRoute || dynamic;
+
+  const ctx = {
+    path,
+    query,
+    params: dynamic?.params || {},
+  };
 
   if (!route) {
     root.innerHTML = renderNotFound(path);
@@ -55,9 +83,9 @@ function renderRoute() {
     return;
   }
 
-  root.innerHTML = route.render();
+  root.innerHTML = route.render(ctx);
   if (typeof route.mount === "function") {
-    route.mount();
+    route.mount(ctx);
   }
 }
 
