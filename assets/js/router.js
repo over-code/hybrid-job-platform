@@ -1,6 +1,8 @@
 import { renderHome } from "./pages/home.js";
 import { renderAbout } from "./pages/about.js";
 import { renderContacts } from "./pages/contacts.js";
+import { renderVacancies } from "./pages/vacancies.js";
+import { renderProjects } from "./pages/projects.js";
 import { renderNotFound } from "./pages/not-found.js";
 
 function getAppRoot() {
@@ -22,6 +24,8 @@ const routes = {
   "/": renderHome,
   "/about": renderAbout,
   "/contacts": renderContacts,
+  "/vacancies": renderVacancies,
+  "/projects": renderProjects,
 };
 
 function renderRoute() {
