@@ -25,6 +25,14 @@ function writeJson(key, value) {
   localStorage.setItem(key, JSON.stringify(value));
 }
 
+function ensureObject(key, fallback) {
+  const value = readJson(key, null);
+  if (value && typeof value === "object" && !Array.isArray(value)) return value;
+  const next = fallback;
+  writeJson(key, next);
+  return next;
+}
+
 function ensureArray(key) {
   const value = readJson(key, null);
   if (Array.isArray(value)) return value;
@@ -57,6 +65,21 @@ function createVacancy(overrides = {}) {
   };
 }
 
+function createUser(overrides = {}) {
+  const t = nowIso();
+  return {
+    id: generateId("usr"),
+    role: "candidate",
+    name: "User",
+    email: "",
+    password: "",
+    avatarUrl: null,
+    createdAt: t,
+    updatedAt: t,
+    ...overrides,
+  };
+}
+
 function createProject(overrides = {}) {
   const t = nowIso();
   return {
@@ -82,10 +105,7 @@ export const api = {
   initMockData() {
     ensureArray(KEYS.users);
 
-    const session = readJson(KEYS.session, null);
-    if (session == null || typeof session !== "object") {
-      writeJson(KEYS.session, { currentUserId: null, remember: false });
-    }
+    ensureObject(KEYS.session, { currentUserId: null, remember: false });
 
     const vacancies = readJson(KEYS.vacancies, null);
     if (!Array.isArray(vacancies) || vacancies.length === 0) {
@@ -117,5 +137,100 @@ export const api = {
 
   getProjects() {
     return ensureArray(KEYS.projects);
+  },
+
+  getUsers() {
+    return ensureArray(KEYS.users);
+  },
+
+  getSession() {
+    return ensureObject(KEYS.session, { currentUserId: null, remember: false });
+  },
+
+  setSession(nextSession) {
+    writeJson(KEYS.session, nextSession);
+  },
+
+  getUserById(id) {
+    if (!id) return null;
+    const users = ensureArray(KEYS.users);
+    return users.find((u) => u.id === id) || null;
+  },
+
+  getCurrentUser() {
+    const session = this.getSession();
+    return this.getUserById(session.currentUserId);
+  },
+
+  register({ role, name, email, password }) {
+    const users = ensureArray(KEYS.users);
+    const normalizedEmail = String(email || "").trim().toLowerCase();
+
+    if (!normalizedEmail) {
+      throw new Error("Email обязателен");
+    }
+
+    if (!String(password || "").trim()) {
+      throw new Error("Пароль обязателен");
+    }
+
+    const exists = users.some((u) => String(u.email || "").toLowerCase() === normalizedEmail);
+    if (exists) {
+      throw new Error("Пользователь с таким email уже существует");
+    }
+
+    const safeRole = role === "employer" ? "employer" : "candidate";
+    const safeName = String(name || "").trim() || "User";
+
+    const user = createUser({
+      role: safeRole,
+      name: safeName,
+      email: normalizedEmail,
+      password: String(password),
+    });
+
+    users.push(user);
+    writeJson(KEYS.users, users);
+    return user;
+  },
+
+  login({ email, password, remember = false }) {
+    const users = ensureArray(KEYS.users);
+    const normalizedEmail = String(email || "").trim().toLowerCase();
+    const user = users.find((u) => String(u.email || "").toLowerCase() === normalizedEmail) || null;
+
+    if (!user) {
+      throw new Error("Пользователь не найден");
+    }
+
+    if (String(user.password) !== String(password)) {
+      throw new Error("Неверный пароль");
+    }
+
+    this.setSession({ currentUserId: user.id, remember: Boolean(remember) });
+    return user;
+  },
+
+  logout() {
+    const session = this.getSession();
+    this.setSession({ ...session, currentUserId: null });
+  },
+
+  updatePassword({ email, newPassword }) {
+    const users = ensureArray(KEYS.users);
+    const normalizedEmail = String(email || "").trim().toLowerCase();
+    const idx = users.findIndex((u) => String(u.email || "").toLowerCase() === normalizedEmail);
+
+    if (idx === -1) {
+      throw new Error("Пользователь не найден");
+    }
+
+    if (!String(newPassword || "").trim()) {
+      throw new Error("Новый пароль обязателен");
+    }
+
+    const t = nowIso();
+    users[idx] = { ...users[idx], password: String(newPassword), updatedAt: t };
+    writeJson(KEYS.users, users);
   },
 };
