@@ -6,9 +6,9 @@ export function renderNotFound(path) {
       <div class="card">
         <h1>404</h1>
         <p>Страница не найдена: <code>${safePath}</code></p>
-        <p style="margin-top: 12px;">
-          <a href="#/">На главную</a>
-        </p>
+        <div class="btn-row mt-12">
+          <a class="btn btn--ghost" href="#/">На главную</a>
+        </div>
       </div>
     </div>
   `;
