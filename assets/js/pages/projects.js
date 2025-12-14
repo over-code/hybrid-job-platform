@@ -109,6 +109,9 @@ export function renderProjects(ctx = {}) {
     return hay.includes(q);
   });
 
+  const totalCount = projects.length;
+  const shownCount = filtered.length;
+
   const items = filtered
     .map((p) => {
       const safeTitle = escapeHtml(p.title);
@@ -190,6 +193,7 @@ export function renderProjects(ctx = {}) {
         <div>
           <h1>Фриланс-проекты</h1>
           <p class="text-muted mt-8">Реалистичные задачи для дизайна, разработки, QA, контента и аналитики.</p>
+          <div class="text-muted text-small mt-8">Показано: ${shownCount} из ${totalCount}</div>
         </div>
       </div>
 

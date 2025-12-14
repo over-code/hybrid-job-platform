@@ -145,6 +145,9 @@ export function renderVacancies(ctx = {}) {
     return hay.includes(q);
   });
 
+  const totalCount = vacancies.length;
+  const shownCount = filtered.length;
+
   const items = filtered
     .map((v) => {
       const safeTitle = escapeHtml(v.title);
@@ -240,6 +243,7 @@ export function renderVacancies(ctx = {}) {
         <div>
           <h1>Вакансии в IT</h1>
           <p class="text-muted mt-8">Подборка ролей не только для разработчиков: дизайн, QA, DevOps, аналитика, менеджмент и контент.</p>
+          <div class="text-muted text-small mt-8">Показано: ${shownCount} из ${totalCount}</div>
         </div>
       </div>
 
