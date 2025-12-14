@@ -1,16 +1,22 @@
 export function renderForgotPassword() {
   return `
     <div class="container">
-      <div class="card">
-        <h1>Восстановление пароля</h1>
-        <p style="margin-top: 10px;">
-          В учебной версии мы не отправляем письма. Перейди на экран сброса и задай новый пароль.
-        </p>
-        <p style="margin-top: 12px;">
-          <a href="#/reset-password">Перейти к сбросу пароля</a>
-          <span style="opacity: 0.6;"> · </span>
-          <a href="#/login">Назад к входу</a>
-        </p>
+      <div class="bento-card">
+        <div class="bento-card__inner">
+          <div class="page-head">
+            <div>
+              <h1 class="h1">Восстановление пароля</h1>
+              <p class="text-muted mt-8">
+                Демо‑режим: письма не отправляются. Перейди на экран сброса и задай новый пароль.
+              </p>
+            </div>
+          </div>
+
+          <div class="btn-row mt-16">
+            <a class="btn btn--primary" href="#/reset-password">Сбросить пароль</a>
+            <a class="btn btn--ghost" href="#/login">Назад к входу</a>
+          </div>
+        </div>
       </div>
     </div>
   `;

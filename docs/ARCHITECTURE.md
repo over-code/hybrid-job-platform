@@ -19,7 +19,9 @@ hybrid-job-platform/
     js/
       main.js
       router.js
+      shell.js
       store.js
+      theme.js
       pages/
         home.js
         login.js
@@ -33,16 +35,12 @@ hybrid-job-platform/
         profile.js
         about.js
         contacts.js
+        not-found.js
       components/
-        header.js
-        footer.js
-        auth-form.js
-        vacancy-card.js
-        project-card.js
+        navbar.js
+        toast.js
       utils/
         api.js
-        validators.js
-        formatters.js
     images/
   docs/
     README.md
