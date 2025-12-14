@@ -4,6 +4,25 @@ import { store } from "./store.js";
 
 let shellGlobalsMounted = false;
 
+ function prefersReducedMotion() {
+  return Boolean(
+    window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches
+  );
+ }
+
+ function getActivePathFromHash() {
+  const raw = window.location.hash || "";
+  const withoutHash = raw.startsWith("#") ? raw.slice(1) : raw;
+  const trimmed = withoutHash.trim() || "/";
+  const [path] = trimmed.split("?");
+  return path || "/";
+ }
+
+ function shouldShowScrollTop() {
+  const path = getActivePathFromHash();
+  return path === "/vacancies" || path === "/projects";
+ }
+
 function iconSun() {
   return `
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
@@ -83,6 +102,13 @@ export function renderShell(pageHtml, ctx = {}) {
         </div>
       </div>
     </footer>
+
+    <button class="btn btn--icon scroll-top" type="button" id="scroll-top" aria-label="Наверх" title="Наверх">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path d="M12 5l-7 7m7-7 7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M12 5v14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+    </button>
   `;
 }
 
@@ -97,6 +123,14 @@ export function mountShell() {
     themeBtn.addEventListener("click", () => {
       const nextTheme = toggleTheme();
       themeBtn.setAttribute("aria-pressed", nextTheme === "light" ? "true" : "false");
+    });
+  }
+
+  const scrollTopBtn = document.getElementById("scroll-top");
+  if (scrollTopBtn && scrollTopBtn.dataset.bound !== "1") {
+    scrollTopBtn.dataset.bound = "1";
+    scrollTopBtn.addEventListener("click", () => {
+      window.scrollTo({ top: 0, behavior: prefersReducedMotion() ? "auto" : "smooth" });
     });
   }
 
@@ -168,9 +202,22 @@ export function mountShell() {
 
     const onScroll = () => {
       document.body.classList.toggle("is-scrolled", window.scrollY > 8);
+
+      const btn = document.getElementById("scroll-top");
+      if (!btn) return;
+      const visible = shouldShowScrollTop() && window.scrollY > 420;
+      btn.classList.toggle("is-visible", visible);
     };
 
     window.addEventListener("scroll", onScroll, { passive: true });
     onScroll();
+
+    window.addEventListener("hashchange", onScroll);
+  }
+
+  const btn = document.getElementById("scroll-top");
+  if (btn) {
+    const visible = shouldShowScrollTop() && window.scrollY > 420;
+    btn.classList.toggle("is-visible", visible);
   }
 }

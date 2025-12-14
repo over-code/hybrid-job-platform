@@ -520,7 +520,7 @@ export const api = {
           companyName: "inDrive",
           city: "Алматы",
           workMode: "office",
-          employmentType: "full_time",
+          employmentType: "contract",
           salaryFrom: 800000,
           salaryTo: 1400000,
           tags: ["Node.js", "PostgreSQL", "Redis", "Docker"],
@@ -532,7 +532,7 @@ export const api = {
           companyName: "NebulaSoft",
           city: "Астана",
           workMode: "hybrid",
-          employmentType: "full_time",
+          employmentType: "part_time",
           salaryFrom: 650000,
           salaryTo: 1200000,
           tags: ["Python", "Django", "REST", "Celery"],
@@ -556,7 +556,7 @@ export const api = {
           companyName: "Kolesa Group",
           city: "Алматы",
           workMode: "hybrid",
-          employmentType: "full_time",
+          employmentType: "internship",
           salaryFrom: 550000,
           salaryTo: 950000,
           tags: ["Playwright", "JavaScript", "API Testing", "Allure"],
@@ -779,6 +779,10 @@ export const api = {
       const next = vacancies.map((v, idx) => {
         if (!v || typeof v !== "object") return v;
 
+        const employmentTypes = ["full_time", "contract", "part_time", "internship"];
+        const desiredEmploymentType = employmentTypes[idx % employmentTypes.length];
+        const isSystemVacancy = v.createdByUserId === "system";
+
         const hasMode = v && (v.workMode === "remote" || v.workMode === "hybrid" || v.workMode === "office");
         if (hasMode) {
           const patch = {};
@@ -788,8 +792,9 @@ export const api = {
           if (typeof v.remote !== "boolean") {
             patch.remote = v.workMode === "remote";
           }
-          if (!v.employmentType) {
-            patch.employmentType = "full_time";
+          if (!v.employmentType) patch.employmentType = "full_time";
+          if (isSystemVacancy && (v.employmentType == null || v.employmentType === "full_time")) {
+            patch.employmentType = desiredEmploymentType;
           }
 
           const d = defaultVacancyDetails();
@@ -815,11 +820,15 @@ export const api = {
         const d = defaultVacancyDetails();
         const salaryFrom = v.salaryFrom == null ? null : Number(v.salaryFrom);
         const salaryTo = v.salaryTo == null ? null : Number(v.salaryTo);
+        const migratedEmploymentType =
+          isSystemVacancy && (v.employmentType == null || v.employmentType === "full_time")
+            ? desiredEmploymentType
+            : v.employmentType || "full_time";
         return {
           ...v,
           workMode: remote ? "remote" : "office",
           remote,
-          employmentType: v.employmentType || "full_time",
+          employmentType: migratedEmploymentType,
           responsibilities: ensureArrayField(v.responsibilities, d.responsibilities),
           requirements: ensureArrayField(v.requirements, d.requirements),
           conditions: ensureArrayField(v.conditions, d.conditions),
